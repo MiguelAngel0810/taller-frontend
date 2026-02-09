@@ -1,0 +1,77 @@
+/* RESET GLOBAL */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Smooth scroll for in-page anchors */
+html {
+  scroll-behavior: smooth;
+}
+
+/* SECTIONS */
+.section {
+  min-height: 100vh;
+  padding: 120px 60px 60px;
+}
+
+.gray {
+  background-color: #f4f4f4;
+}
+
+.hero {
+  background-color: #111;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* TITLES */
+h1 {
+  font-size: 48px;
+  margin-bottom: 20px;
+}
+
+h2 {
+  font-size: 36px;
+  margin-bottom: 20px;
+}
+
+/* AUTH SECTIONS */
+.auth-section {
+  min-height: 100vh;
+  padding-top: 120px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.auth-form {
+  width: 320px;
+  display: flex;
+  flex-direction: column;
+}
+
+.auth-form input {
+  margin-bottom: 15px;
+  padding: 10px;
+  font-size: 14px;
+}
+
+.primary-btn {
+  background-color: #6f42c1;
+  color: white;
+  border: none;
+  padding: 10px;
+  cursor: pointer;
+}
+
+.link-btn {
+  background: none;
+  border: none;
+  color: #6f42c1;
+  margin-top: 15px;
+  cursor: pointer;
+}
