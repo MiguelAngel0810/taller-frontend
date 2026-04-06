@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Vehiculo } from '../pages/models/vehiculo.model';
 import { OrdenServicio } from '../pages/models/orden-servicio.model';
+import { environment } from '../../environment';
 
 // Define una interfaz para la información de seguimiento para mejorar la legibilidad y seguridad de tipos.
 export interface Seguimiento {
@@ -17,7 +18,7 @@ type ApiResponse<T> = T | { data: T };
   providedIn: 'root'
 })
 export class ClienteService {
-  private apiUrl = 'http://127.0.0.1:8000/api';
+  private apiUrl = environment.apiUrl;
   private http = inject(HttpClient);
 
   getMisVehiculos(): Observable<ApiResponse<Vehiculo[]>> {

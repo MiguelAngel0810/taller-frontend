@@ -1,8 +1,83 @@
 <div class="container-fluid p-4">
   <header class="d-flex justify-content-between align-items-center mb-4">
     <h1 class="h3">Gestión de Vehículos</h1>
-    <!-- Botón para crear nuevos vehículos en el futuro -->
+    <button class="btn btn-primary" (click)="toggleForm()">
+      <i class="bi bi-plus-circle me-1"></i> Nuevo Vehículo
+    </button>
   </header>
+
+@if (showForm()) {
+    <div class="modal-backdrop fade show"></div>
+    <div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+          <div class="modal-header bg-primary text-white">
+            <h5 class="modal-title">{{ isEditing() ? 'Editar Vehículo' : 'Registrar Nuevo Vehículo' }}</h5>
+            <button type="button" class="btn-close btn-close-white" (click)="toggleForm()"></button>
+          </div>
+          <div class="modal-body p-4">
+            <form [formGroup]="vehiculoForm" (ngSubmit)="saveVehiculo()">
+              <div class="mb-3">
+                <label for="id_cliente" class="form-label fw-bold">Propietario</label>
+                <select id="id_cliente" class="form-select" formControlName="id_cliente" [class.is-invalid]="vehiculoForm.get('id_cliente')?.invalid && vehiculoForm.get('id_cliente')?.touched">
+                  <option value="">Seleccione un cliente</option>
+                  @for (c of allClientes(); track c.id) {
+                    <option [value]="c.id">{{ c.usuario.nombre }} ({{ c.usuario.numero_documento }})</option>
+                  }
+                </select>
+                <div class="invalid-feedback">Debe seleccionar un propietario.</div>
+              </div>
+
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label for="marca" class="form-label fw-bold">Marca</label>
+                  <input id="marca" type="text" class="form-control" formControlName="marca" placeholder="Ej: Toyota">
+                  @if (vehiculoForm.get('marca')?.invalid && vehiculoForm.get('marca')?.touched) {
+                    <small class="text-danger">Requerido (máx 50).</small>
+                  }
+                </div>
+                <div class="col-md-6">
+                  <label for="modelo" class="form-label fw-bold">Modelo</label>
+                  <input id="modelo" type="text" class="form-control" formControlName="modelo" placeholder="Ej: Corolla">
+                  @if (vehiculoForm.get('modelo')?.invalid && vehiculoForm.get('modelo')?.touched) {
+                    <small class="text-danger">Requerido (máx 50).</small>
+                  }
+                </div>
+                <div class="col-md-6">
+                  <label for="placa" class="form-label fw-bold">Placa</label>
+                  <input id="placa" type="text" class="form-control" formControlName="placa" placeholder="ABC-123" maxlength="7" style="text-transform: uppercase;">
+                  @if (vehiculoForm.get('placa')?.invalid && vehiculoForm.get('placa')?.touched) {
+                    <small class="text-danger">Placa no válida (máx 7).</small>
+                  }
+                </div>
+                <div class="col-md-6">
+                  <label for="anio" class="form-label fw-bold">Año</label>
+                  <input id="anio" type="number" class="form-control" formControlName="anio" placeholder="2024">
+                  @if (vehiculoForm.get('anio')?.invalid && vehiculoForm.get('anio')?.touched) {
+                    <small class="text-danger">Año no válido.</small>
+                  }
+                </div>
+                <div class="col-md-12">
+                  <label for="imagen" class="form-label fw-bold">Foto del Vehículo (Opcional)</label>
+                  <input id="imagen" type="file" class="form-control" (change)="onFileSelected($event)" accept="image/*">
+                </div>
+              </div>
+
+              <div class="mt-4 pt-3 border-top d-flex justify-content-end gap-2">
+                <button type="button" class="btn btn-outline-secondary" (click)="toggleForm()">Cancelar</button>
+                <button type="submit" class="btn btn-primary px-4" [disabled]="vehiculoForm.invalid || loading()">
+                  @if (loading()) {
+                    <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                  }
+                      {{ isEditing() ? 'Actualizar Vehículo' : 'Guardar Vehículo' }}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
 
   <div class="card shadow-sm mb-4">
     <div class="card-body">
@@ -42,7 +117,7 @@
                 <th scope="col">Modelo</th>
                 <th scope="col">Año</th>
                 <th scope="col">Placa</th>
-                <th scope="col">Mecánico Asignado</th>
+                <th scope="col">Foto</th>
                 <th scope="col" class="text-end">Acciones</th>
               </tr>
             </thead>
@@ -50,16 +125,27 @@
               @for (vehiculo of vehiculos(); track vehiculo.id) {
                 <tr>
                   <td>{{ vehiculo.id }}</td>
-                  <td>{{ vehiculo.cliente?.usuario?.nombre || 'N/A' }}</td>
+                  <td>{{ getPropietarioNombre(vehiculo) }}</td>
                   <td>{{ vehiculo.marca }}</td>
                   <td>{{ vehiculo.modelo }}</td>
                   <td>{{ vehiculo.anio }}</td>
                   <td>{{ vehiculo.placa }}</td>
-                  <td>{{ getMecanicoNombre(vehiculo) }}</td>
+                  <td>
+                    @if (vehiculo.imagen) {
+                      <img [src]="getImageUrl(vehiculo.imagen)" [alt]="vehiculo.placa" class="rounded shadow-sm" style="width: 45px; height: 45px; object-fit: cover;">
+                    } @else {
+                      <div class="bg-light rounded d-flex align-items-center justify-content-center text-muted" style="width: 45px; height: 45px;">
+                        <i class="bi bi-camera"></i>
+                      </div>
+                    }
+                  </td>
                   <td class="text-end">
-                    <div class="btn-group" role="group" aria-label="Acciones de vehículo">
+                    <div class="btn-group" role="group">
+                      <button type="button" class="btn btn-sm btn-outline-primary" (click)="editVehiculo(vehiculo)">
+                        <i class="bi bi-pencil"></i> Editar
+                      </button>
                       <button type="button" class="btn btn-sm btn-outline-danger" (click)="deleteVehiculo(vehiculo.id)">
-                        Eliminar
+                        <i class="bi bi-trash"></i> Borrar
                       </button>
                     </div>
                   </td>

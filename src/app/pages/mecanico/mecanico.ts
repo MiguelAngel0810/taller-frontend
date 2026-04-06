@@ -7,8 +7,7 @@ import { OrdenServicio } from '../models/orden-servicio.model';
 
 @Component({
   selector: 'app-mecanico',
-  standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule],
   templateUrl: './mecanico.html',
   styleUrl: './mecanico.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

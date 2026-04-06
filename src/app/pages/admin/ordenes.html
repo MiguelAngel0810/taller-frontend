@@ -1,15 +1,182 @@
 <div class="container-fluid p-4">
   <header class="d-flex justify-content-between align-items-center mb-4">
     <h1 class="h3">Gestión de Órdenes de Servicio</h1>
-    <!-- Botón para crear nueva orden -->
+    <button class="btn btn-primary" (click)="toggleForm()">
+      {{ showForm() ? 'Cancelar' : 'Nueva Orden' }}
+    </button>
   </header>
+
+  @if (showForm()) {
+    <div class="modal-backdrop fade show"></div>
+    <div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true">
+      <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+          <div class="modal-header bg-primary text-white">
+            <h5 class="modal-title">Registrar Nueva Orden de Servicio</h5>
+            <button type="button" class="btn-close btn-close-white" (click)="toggleForm()"></button>
+          </div>
+          <div class="modal-body p-4">
+            <form [formGroup]="ordenForm" (ngSubmit)="crearOrden()">
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label for="id_vehiculo" class="form-label fw-bold">Vehículo</label>
+                  <select id="id_vehiculo" class="form-select" formControlName="id_vehiculo" [class.is-invalid]="ordenForm.get('id_vehiculo')?.invalid && ordenForm.get('id_vehiculo')?.touched">
+                    <option value="">Seleccione un vehículo</option>
+                    @for (v of allVehiculos(); track v.id) {
+                      <option [value]="v.id" [disabled]="estaOcupado(v)">
+                        {{ v.marca }} {{ v.modelo }} ({{ v.placa }})
+                        @if (estaOcupado(v)) { - [EN TALLER] }
+                      </option>
+                    }
+                  </select>
+                  @if (ordenForm.get('id_vehiculo')?.invalid && ordenForm.get('id_vehiculo')?.touched) {
+                    <div class="invalid-feedback">Debe seleccionar un vehículo.</div>
+                  }
+                </div>
+                <div class="col-md-6">
+                  <label for="id_mecanico" class="form-label fw-bold">Mecánico Asignado</label>
+                  <select id="id_mecanico" class="form-select" formControlName="id_mecanico" [class.is-invalid]="ordenForm.get('id_mecanico')?.invalid && ordenForm.get('id_mecanico')?.touched">
+                    <option value="">Seleccione un mecánico</option>
+                    @for (m of allMecanicos(); track m.id) {
+                      <option [value]="m.usuario?.id">{{ m.usuario?.nombre }} ({{ m.especialidad }})</option>
+                    }
+                  </select>
+                  @if (ordenForm.get('id_mecanico')?.invalid && ordenForm.get('id_mecanico')?.touched) {
+                    <div class="invalid-feedback">Debe asignar un mecánico al servicio.</div>
+                  }
+                </div>
+                <div class="col-md-12">
+                  <label for="titulo" class="form-label fw-bold">Título de la Orden</label>
+                  <input id="titulo" type="text" class="form-control" formControlName="titulo" placeholder="Ej: Mantenimiento de 10k KM" [class.is-invalid]="ordenForm.get('titulo')?.invalid && ordenForm.get('titulo')?.touched">
+                  @if (ordenForm.get('titulo')?.invalid && ordenForm.get('titulo')?.touched) {
+                    <div class="invalid-feedback">El título es requerido (máx. 100 carac.).</div>
+                  }
+                </div>
+                <div class="col-md-12">
+                  <label for="descripcion" class="form-label fw-bold">Descripción Detallada</label>
+                  <textarea id="descripcion" class="form-control" formControlName="descripcion" rows="3" [class.is-invalid]="ordenForm.get('descripcion')?.invalid && ordenForm.get('descripcion')?.touched"></textarea>
+                  @if (ordenForm.get('descripcion')?.invalid && ordenForm.get('descripcion')?.touched) {
+                    <div class="invalid-feedback">Proporcione una descripción del trabajo.</div>
+                  }
+                </div>
+                <div class="col-md-6">
+                  <label for="fecha_inicio" class="form-label fw-bold">Fecha de Inicio</label>
+                  <input id="fecha_inicio" type="date" class="form-control" formControlName="fecha_inicio" [class.is-invalid]="ordenForm.get('fecha_inicio')?.invalid && ordenForm.get('fecha_inicio')?.touched">
+                  @if (ordenForm.get('fecha_inicio')?.touched && ordenForm.get('fecha_inicio')?.invalid) {
+                    <div class="invalid-feedback">La fecha no puede ser anterior a hoy.</div>
+                  }
+                </div>
+                <div class="col-md-6">
+                  <label for="fecha_fin" class="form-label fw-bold">Fecha Estimada de Fin</label>
+                  <input id="fecha_fin" type="date" class="form-control" formControlName="fecha_fin" [class.is-invalid]="ordenForm.get('fecha_fin')?.invalid && ordenForm.get('fecha_fin')?.touched">
+                  @if (ordenForm.get('fecha_fin')?.touched && ordenForm.get('fecha_fin')?.invalid) {
+                    <div class="invalid-feedback">El plazo es requerido y no puede ser mayor a 2 meses.</div>
+                  }
+                </div>
+                <div class="col-12 mt-4 pt-3 border-top d-flex justify-content-between">
+                  <div class="text-muted small">
+                    <i class="bi bi-info-circle"></i> La orden se iniciará con estado <strong>En Proceso</strong>.
+                  </div>
+                  <div>
+                    <button type="button" class="btn btn-outline-secondary me-2" (click)="toggleForm()">Cancelar</button>
+                    <button type="submit" class="btn btn-primary px-4" [disabled]="ordenForm.invalid || loading()">
+                      @if (loading()) {
+                        <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                      }
+                      Guardar Orden
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+      </div>
+  }
+
+  @if (showDetail() && selectedOrden(); as orden) {
+    <div class="modal-backdrop fade show"></div>
+    <div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+          <div class="modal-header bg-dark text-white">
+            <h5 class="modal-title">Detalle de Orden #{{ orden.id }}</h5>
+            <button type="button" class="btn-close btn-close-white" (click)="cerrarDetalle()"></button>
+          </div>
+          <div class="modal-body p-4">
+            <div class="mb-4">
+              <h6 class="text-muted text-uppercase small fw-bold">Información del Servicio</h6>
+              <p class="mb-1"><strong>Título:</strong> {{ orden.titulo }}</p>
+              <p class="mb-1"><strong>Vehículo:</strong> {{ orden.vehiculo?.marca }} {{ orden.vehiculo?.modelo }} ({{ orden.vehiculo?.placa }})</p>              
+              <p class="mb-0"><strong>Descripción:</strong> {{ orden.descripcion }}</p>
+            </div>
+
+            <div class="card bg-light border-0">
+              <div class="card-body">
+                <h6 class="fw-bold mb-3">Gestión de Etapas</h6>
+
+                @if (getEtapaKey(orden) === 'diagnostico') {
+                  @if (orden.validacion_diagnostico === 'en_espera') {
+                    <div class="alert alert-info py-2 small">
+                      <i class="bi bi-info-circle-fill"></i> <strong>Etapa: Diagnóstico.</strong> El cliente aún no ha validado el presupuesto.
+                    </div>
+                    <button class="btn btn-success w-100 d-flex align-items-center justify-content-center gap-2" (click)="validarDiagnostico(orden.id)">
+                      <i class="bi bi-check-circle"></i> Aprobar Diagnóstico (Presencial)
+                    </button>
+                  } @else if (orden.validacion_diagnostico === 'aclaracion') {
+                    <div class="alert alert-warning py-2 small">
+                      <i class="bi bi-exclamation-triangle-fill"></i> <strong>Etapa: Aclaración.</strong> El cliente solicita información adicional.
+                    </div>
+                    <button class="btn btn-primary w-100 d-flex align-items-center justify-content-center gap-2" (click)="validarDiagnostico(orden.id, true)">
+                      <i class="bi bi-chat-left-check"></i> Aclaración Solucionada
+                    </button>
+                  }
+                } @else if (getEtapaKey(orden) === 'reparacion') {
+                  <div class="alert alert-success py-2 small">
+                    <i class="bi bi-gear-fill"></i> <strong>Etapa: Reparación.</strong> El diagnóstico fue aprobado y el vehículo está en servicio.
+                  </div>
+                  <button class="btn btn-primary w-100 d-flex align-items-center justify-content-center gap-2" (click)="avanzarEtapa(orden.id, 'reparacion')">
+                    <i class="bi bi-flag-fill"></i> Completar Reparación y Pasar a Pruebas
+                  </button>
+                } @else if (getEtapaKey(orden) === 'pruebas') {
+                  <div class="alert alert-info py-2 small">
+                    <i class="bi bi-clipboard-check-fill"></i> <strong>Etapa: Pruebas.</strong> El vehículo está siendo probado.
+                  </div>
+                  <button class="btn btn-primary w-100 d-flex align-items-center justify-content-center gap-2" (click)="avanzarEtapa(orden.id, 'pruebas')">
+                    <i class="bi bi-flag-fill"></i> Completar Pruebas y Pasar a Finalización
+                  </button>
+                } @else if (getEtapaKey(orden) === 'finalizacion') {
+                  <div class="alert alert-warning py-2 small">
+                    <i class="bi bi-cash-coin"></i> <strong>Etapa: Finalización.</strong> Esperando pago y entrega.
+                  </div>
+                  <button class="btn btn-success w-100 d-flex align-items-center justify-content-center gap-2" (click)="avanzarEtapa(orden.id, 'finalizacion')">
+                    <i class="bi bi-check-all"></i> Cerrar Orden
+                  </button>
+                } @else if (orden.estado === 'finalizado') {
+                  <div class="text-center py-3 bg-white rounded border">
+                    <i class="bi bi-check-all text-success display-6"></i>
+                    <p class="mt-2 mb-0 fw-bold text-success">Orden Finalizada</p>
+                    <small class="text-muted d-block">No se permiten más acciones sobre esta orden.</small>
+                  </div>
+                }
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer border-0">
+            <button type="button" class="btn btn-outline-secondary" (click)="cerrarDetalle()">Cerrar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
 
   <div class="card shadow-sm mb-4">
     <div class="card-body">
       <h5 class="card-title mb-3">Filtros de Búsqueda</h5>
       <div class="row g-3 align-items-end">
         <div class="col-md-7">
-          <label for="filtroBusqueda" class="form-label">Buscar por Cliente, Vehículo o ID de Orden</label>
+          <label for="filtroBusqueda" class="form-label">Buscar por Cliente o Vehículo</label>
           <input id="filtroBusqueda" type="text" class="form-control" placeholder="Escriba nombre, placa o número de orden..." [value]="filtroBusqueda()" (input)="onFiltroBusquedaChange($event)">
         </div>
         <div class="col-md-3">
@@ -51,7 +218,8 @@
                 <th scope="col">Vehículo (Placa)</th>
                 <th scope="col">Mecánico</th>
                 <th scope="col">Fecha Inicio</th>
-                <th scope="col">Estado</th>
+                <th scope="col">Validación Cliente</th>
+                <th scope="col">Etapa Actual</th>
                 <th scope="col" class="text-end">Acciones</th>
               </tr>
             </thead>
@@ -60,15 +228,34 @@
                 <tr>
                   <td>{{ orden.id }}</td>
                   <td>{{ orden.titulo }}</td>
-                  <td>{{ orden.vehiculo?.cliente?.usuario?.nombre || 'N/A' }}</td>
+                  <td>{{ getClienteNombre(orden) }}</td>
                   <td>{{ orden.vehiculo?.marca }} - {{ orden.vehiculo?.modelo }} ({{ orden.vehiculo?.placa }})</td>
-                  <td>{{ orden.mecanico?.usuario?.nombre || 'Sin asignar' }}</td>
+                  <td>{{ getMecanicoNombre(orden) }}</td>
                   <td>{{ orden.fecha_inicio | date:'shortDate' }}</td>
                   <td>
-                    <span class="badge bg-secondary">{{ orden.estado }}</span>
+                    @switch (orden.validacion_diagnostico) {
+                      @case ('aprobado') {
+                        <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">
+                          <i class="bi bi-patch-check-fill"></i> Aprobada
+                        </span>
+                      }
+                      @case ('aclaracion') {
+                        <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-2 py-1">
+                          <i class="bi bi-exclamation-triangle-fill"></i> Solicita aclaración
+                        </span>
+                      }
+                      @default {
+                        <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle px-2 py-1">
+                          <i class="bi bi-clock-history"></i> En proceso
+                        </span>
+                      }
+                    }
+                  </td>
+                  <td>
+                    <span class="badge" [class]="getEtapaColorClass(orden)">{{ getEtapaActualLabel(orden) }}</span>
                   </td>
                   <td class="text-end">
-                    <button class="btn btn-sm btn-outline-primary">Ver Detalle</button>
+                    <button class="btn btn-sm btn-outline-primary" (click)="verDetalle(orden)">Ver Detalle</button>
                   </td>
                 </tr>
               }

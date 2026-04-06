@@ -1,38 +1,47 @@
-import { Component, signal, OnInit, OnDestroy, inject, ChangeDetectorRef } from '@angular/core';
+import { Component, signal, OnInit, OnDestroy, inject, ChangeDetectionStrategy, computed } from '@angular/core';
 import { RouterOutlet, RouterLink } from '@angular/router';
-import { CommonModule } from '@angular/common';
+import { CommonModule, NgOptimizedImage } from '@angular/common';
 import { AuthService } from './services/auth.service';
+import { PushNotificationService } from './services/push-notification.service';
 import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-root',
-  standalone: true,
-  imports: [RouterOutlet, RouterLink, CommonModule],
+  imports: [RouterOutlet, RouterLink, CommonModule, NgOptimizedImage],
   templateUrl: './app.html',
-  styleUrls: ['./app.scss']
+  styleUrls: ['./app.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class App implements OnInit, OnDestroy {
   private authService = inject(AuthService);
-  private cdr = inject(ChangeDetectorRef);
+  private pushService = inject(PushNotificationService);
 
-  protected readonly title = signal('Crud_Angular');
-  isLoading = true;
-  isFading = false;
-  isAuthenticated = this.authService.isAuthenticated();
-  userName = this.authService.getUserName();
+  protected readonly title = signal('taller');
+  public isLoading = signal(true);
+  public isFading = signal(false);
+  public isAuthenticated = signal(this.authService.isAuthenticated());
+  public userRole = signal<string | null>(null);
+  public userName = signal(this.authService.getUserName());
   private authSubscription: Subscription = new Subscription();
+
+  // Lógica para decidir si mostrar la barra de navegación principal
+  public showMainNavbar = computed(() => {
+    // Ocultamos la barra principal (landing/pública) si el usuario es ADMIN
+    return this.userRole() !== 'ADMIN';
+  });
 
   constructor() {}
 
   ngOnInit(): void {
     this.authSubscription.add(
       this.authService.getRoleObservable().subscribe((role: string | null) => {
-        this.isAuthenticated = !!role;
+        this.isAuthenticated.set(!!role);
+        this.userRole.set(role);
       })
     );
     this.authSubscription.add(
       this.authService.getUserNameObservable().subscribe((name: string | null) => {
-        this.userName = name;
+        this.userName.set(name);
       })
     );
 
@@ -45,19 +54,21 @@ export class App implements OnInit, OnDestroy {
 
     // Animación inicial (F5)
     this.runAnimation();
+
+    // Inicializar push si ya está autenticado
+    if (this.isAuthenticated()) {
+      this.pushService.initialize();
+    }
   }
 
   private runAnimation() {
-    this.isLoading = true;
-    this.isFading = false;
-    this.cdr.detectChanges();
+    this.isLoading.set(true);
+    this.isFading.set(false);
 
     setTimeout(() => {
-      this.isFading = true; // Inicia el desvanecimiento
-      this.cdr.detectChanges(); // Forzar actualización de la vista
+      this.isFading.set(true); // Inicia el desvanecimiento
       setTimeout(() => {
-        this.isLoading = false; // Elimina del DOM después de la transición
-        this.cdr.detectChanges(); // Forzar actualización final
+        this.isLoading.set(false); // Elimina del DOM después de la transición
       }, 500); // Tiempo que dura el desvanecimiento (0.5s)
     }, 1000); // Tiempo de carga (1s)
   }

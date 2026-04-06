@@ -1,3 +1,11 @@
+.page-container {
+  padding-top: 70px; /* Altura de la cabecera */
+  min-height: 100vh;
+  &.no-header {
+    padding-top: 0; /* Si es cliente, no necesita espacio superior */
+  }
+}
+
 .header {
   position: fixed;
   top: 0;

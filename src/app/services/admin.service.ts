@@ -7,17 +7,34 @@ import { OrdenServicio } from '../pages/models/orden-servicio.model';
 import { Role } from '../pages/models/role.model';
 import { Usuario } from '../pages/models/usuario.model';
 import { Vehiculo } from '../pages/models/vehiculo.model';
+import { TipoDocumento } from '../pages/models/tipo-documento.model';
+import { Cliente } from '../pages/models/cliente.model';
+import { environment } from '../../environment';
+
+// Definición de tipos para las respuestas de la API fuera de la clase
+type ApiResponse<T> = T | { data: T };
+type NestedApiResponse<T> = T | { data: T } | { data: { data: T } };
 
 @Injectable({
   providedIn: 'root'
 })
 export class AdminService {
-  private apiUrl = 'http://127.0.0.1:8000/api';
+  private apiUrl = environment.apiUrl;
   private http = inject(HttpClient);
 
+  // Helper privado para extraer datos de forma robusta (maneja paginación y recursos de Laravel)
+  private extractData<T>(res: any): T[] {
+    if (Array.isArray(res)) return res;
+    if (res?.data && Array.isArray(res.data)) return res.data;
+    if (res?.data?.data && Array.isArray(res.data.data)) return res.data.data;
+    // Fallback por si la clave es diferente (ej. res.usuarios)
+    const firstKeyAsArray = Object.values(res).find(v => Array.isArray(v));
+    return Array.isArray(firstKeyAsArray) ? firstKeyAsArray : [];
+  }
+
   getUsuarios(): Observable<Usuario[]> {
-    return this.http.get<{ data: Usuario[] }>(`${this.apiUrl}/usuarios`).pipe(
-      map((res) => res.data || res)
+    return this.http.get<any>(`${this.apiUrl}/usuarios`).pipe(
+      map(res => this.extractData<Usuario>(res))
     );
   }
 
@@ -34,14 +51,20 @@ export class AdminService {
   }
 
   getRoles(): Observable<Role[]> {
-    return this.http.get<{ data: Role[] }>(`${this.apiUrl}/roles`).pipe(
-      map((res) => res.data || res)
+    return this.http.get<any>(`${this.apiUrl}/roles`).pipe(
+      map(res => this.extractData<Role>(res))
+    );
+  }
+
+  getTiposDocumento(): Observable<TipoDocumento[]> {
+    return this.http.get<any>(`${this.apiUrl}/tipos-documento`).pipe(
+      map(res => this.extractData<TipoDocumento>(res))
     );
   }
 
   getVehiculos(): Observable<Vehiculo[]> {
-    return this.http.get<{ data: Vehiculo[] }>(`${this.apiUrl}/vehiculos`).pipe(
-      map((res) => res.data || res)
+    return this.http.get<any>(`${this.apiUrl}/vehiculos`).pipe(
+      map(res => this.extractData<Vehiculo>(res))
     );
   }
 
@@ -49,20 +72,52 @@ export class AdminService {
     return this.http.delete<void>(`${this.apiUrl}/vehiculos/${id}`);
   }
 
+  createVehiculo(vehiculo: any): Observable<Vehiculo> {
+    return this.http.post<ApiResponse<Vehiculo>>(`${this.apiUrl}/vehiculos`, vehiculo).pipe(
+      map(res => ('data' in res && res.data) ? res.data : res as Vehiculo)
+    );
+  }
+
   getMecanicos(): Observable<Mecanico[]> {
-    return this.http.get<{ data: Mecanico[] }>(`${this.apiUrl}/mecanicos`).pipe(
-      map((res) => res.data || [])
+    return this.http.get<any>(`${this.apiUrl}/mecanicos`).pipe(
+      map(res => this.extractData<Mecanico>(res))
+    );
+  }
+
+  createOrden(orden: any): Observable<OrdenServicio> {
+    return this.http.post<ApiResponse<OrdenServicio>>(`${this.apiUrl}/ordenes`, orden).pipe(
+      map(res => ('data' in res && res.data) ? res.data : res as OrdenServicio)
     );
   }
 
   getOrdenes(): Observable<OrdenServicio[]> {
-    // La respuesta del backend es un objeto paginado, por lo que necesitamos acceder a la propiedad `data.data`
-    // para obtener el array de órdenes.
-    return this.http.get<{ data: { data: OrdenServicio[] } }>(`${this.apiUrl}/ordenes-servicio`).pipe(
-      map((res) => {
-        // Aseguramos que devolvemos el array de órdenes que está dentro del objeto de paginación.
-        return res.data.data || [];
-      })
+    return this.http.get<any>(`${this.apiUrl}/ordenes-servicio`).pipe(
+      map(res => this.extractData<OrdenServicio>(res))
     );
+  }
+
+  consultarDocumento(id_tipo_documento: number, numero: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/consulta-documento`, { id_tipo_documento, numero });
+  }
+
+  validarDiagnostico(idOrden: number, estado: 'aprobado' | 'aclaracion'): Observable<any> {
+    return this.http.post(`${this.apiUrl}/etapa-servicio/validar-diagnostico/${idOrden}`, { estado });
+  }
+
+  updateEstadoEtapa(idEtapa: number, estado: string): Observable<any> {
+    return this.http.patch(`${this.apiUrl}/etapa-servicio/${idEtapa}`, { estado });
+  }
+
+  updateEstadoOrden(idOrden: number, estado: string): Observable<any> {
+    return this.http.patch(`${this.apiUrl}/ordenes/${idOrden}`, { estado });
+  }
+
+  getClientes(): Observable<Cliente[]> {
+    return this.http.get<any>(`${this.apiUrl}/clientes`).pipe(
+      map(res => this.extractData<Cliente>(res))
+    );
+  }
+  updateVehiculo(id: number, data: FormData): Observable<any> {
+    return this.http.post(`${this.apiUrl}/vehiculos/${id}?_method=PUT`, data);
   }
 }

@@ -1,28 +1,42 @@
-<!-- Pantalla de Carga -->
-<div class="loading-screen" *ngIf="isLoading" [class.fade-out]="isFading">
-  <div class="loading-content">
-    <!-- Asegúrate de tener una imagen llamada 'car-front.png' en tus assets -->
-    <img src="assets/car-front.png" alt="Cargando..." class="car-image">
-    <div class="progress-bar-container">
-      <div class="progress-bar"></div>
+@if (isLoading()) {
+  <div class="loading-screen" [class.fade-out]="isFading()">
+    <div class="loading-content">
+      <img ngSrc="assets/car-front.png" alt="Cargando..." class="car-image" width="150" height="150" priority>
+      <div class="progress-bar-container">
+        <div class="progress-bar"></div>
+      </div>
+      <p>Cargando motores...</p>
     </div>
-    <p>Cargando motores...</p>
   </div>
-</div>
+}
 
 <!-- Contenido Principal (se muestra después de cargar) -->
-<div class="main-content" *ngIf="!isLoading || isFading">
-  <header class="header" *ngIf="!isAuthenticated">
-    <nav class="nav">
-      <a routerLink="/" fragment="inicio">Inicio</a>
-      <a routerLink="/" fragment="quienes">Quiénes Somos</a>
-      <a routerLink="/" fragment="servicios">Servicios</a>
-      <a routerLink="/" fragment="porque">¿Por qué elegirnos?</a>
-      <a routerLink="/" fragment="contacto">Contáctenos</a>
+@if (!isLoading() || isFading()) {
+  <div class="main-content">
+    <!-- Ocultamos la cabecera global si es cliente para reubicar su navegación -->
+    @if (!isAuthenticated() || (userRole() && userRole()?.toLowerCase() !== 'cliente')) {
+      <header class="header">
+      @if (!isAuthenticated()) {
+        <nav class="nav">
+          <a routerLink="/" fragment="inicio">Inicio</a>
+          <a routerLink="/" fragment="quienes">Quiénes Somos</a>
+          <a routerLink="/" fragment="servicios">Servicios</a>
+          <a routerLink="/" fragment="porque">¿Por qué elegirnos?</a>
+          <a routerLink="/" fragment="contacto">Contáctenos</a>
+          <a routerLink="/login" class="login-btn">Iniciar sesión</a>
+        </nav>
+      } @else {
+        <nav class="nav">
+          <span class="welcome-text">Hola, <strong>{{ userName() }}</strong></span>
+          <a routerLink="/cliente" routerLinkActive="active-link">Mi Garaje</a>
+          <button (click)="logout()" class="logout-btn">Cerrar Sesión</button>
+        </nav>
+      }
+      </header>
+    }
 
-      <a routerLink="/login" class="login-btn">Iniciar sesión</a>
-    </nav>
-  </header>
-
-  <router-outlet />
-</div>
+    <main class="page-container" [class.no-header]="isAuthenticated() && userRole()?.toLowerCase() === 'cliente'">
+      <router-outlet />
+    </main>
+  </div>
+}

@@ -1,8 +1,118 @@
 <div class="container-fluid p-4">
   <header class="d-flex justify-content-between align-items-center mb-4">
     <h1 class="h3">Gestión de Usuarios</h1>
-    <!-- El botón y formulario para crear usuarios se implementarán en el siguiente paso -->
+    <button class="btn btn-primary" (click)="toggleForm()">
+      {{ showForm() ? 'Cancelar' : 'Nuevo Usuario' }}
+    </button>
   </header>
+
+  @if (showForm()) {
+    <div class="modal-backdrop fade show"></div>
+    <div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true">
+      <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+          <div class="modal-header bg-primary text-white">
+            <h5 class="modal-title">Registrar Nuevo Usuario</h5>
+            <button type="button" class="btn-close btn-close-white" (click)="toggleForm()"></button>
+          </div>
+          <div class="modal-body p-4">
+            <form [formGroup]="usuarioForm" (ngSubmit)="saveUsuario()">
+              <div class="row g-3">
+                <!-- 1. Selección de Rol - Siempre visible al inicio -->
+                <div class="col-md-12">
+                  <label class="form-label fw-bold">1. Seleccione el Rol del Usuario</label>
+                  <select class="form-select form-select-lg shadow-sm" formControlName="id_rol" [class.is-invalid]="usuarioForm.get('id_rol')?.invalid && usuarioForm.get('id_rol')?.touched">
+                    <option value="">-- Elija un rol para desbloquear el formulario --</option>
+                    @for(rol of roles(); track rol.id) {
+                      <option [value]="rol.id">{{ rol.nombre }}</option>
+                    }
+                  </select>
+                  @if (usuarioForm.get('id_rol')?.invalid && usuarioForm.get('id_rol')?.touched) {
+                    <div class="invalid-feedback">Debe elegir un rol primero.</div>
+                  }
+                </div>
+
+                <!-- 2. Resto del Formulario - Aparece dinámicamente -->
+                @if (usuarioForm.get('id_rol')?.value) {
+                  <div class="col-12 mt-4 pt-3 border-top">
+                    <h6 class="text-muted text-uppercase small fw-bold mb-3">2. Información del {{ getRolNombre() }}</h6>
+                  </div>
+
+                  <!-- Documentación al inicio para facilitar la consulta -->
+                  <div class="col-md-5">
+                    <label class="form-label">Tipo Documento</label>
+                    <select class="form-select" formControlName="id_tipo_documento">
+                      <option value="">Seleccione tipo</option>
+                      @for(tipo of tiposDocumento(); track tipo.id) {
+                        <option [value]="tipo.id">{{ tipo.nombre }} ({{ tipo.abreviatura }})</option>
+                      }
+                    </select>
+                  </div>
+                  <div class="col-md-7">
+                    <label class="form-label">N° Documento</label>
+                    <div class="input-group">
+                      <input type="text" class="form-control" formControlName="numero_documento" placeholder="Ingrese número">
+                      @if (getAbreviaturaSeleccionada() === 'DNI' || getAbreviaturaSeleccionada() === 'RUC') {
+                        <button type="button" class="btn btn-info text-white" (click)="consultarDocumento()" [disabled]="loadingConsulta()">
+                          @if (loadingConsulta()) {
+                            <span class="spinner-border spinner-border-sm"></span>
+                          } @else {
+                            <i class="bi bi-search"></i> Consulta
+                          }
+                        </button>
+                      }
+                    </div>
+                  </div>
+
+                  <div class="col-md-12">
+                    <label class="form-label">Nombre Completo / Razón Social</label>
+                    <input type="text" class="form-control" formControlName="nombre" placeholder="Se completará al consultar" [class.is-invalid]="usuarioForm.get('nombre')?.invalid && usuarioForm.get('nombre')?.touched">
+                  </div>
+
+                  <div class="col-md-6">
+                    <label class="form-label">Correo Electrónico</label>
+                    <input type="email" class="form-control" formControlName="correo" placeholder="correo@ejemplo.com" [class.is-invalid]="usuarioForm.get('correo')?.invalid && usuarioForm.get('correo')?.touched">
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label">Contraseña</label>
+                    <input type="password" class="form-control" formControlName="password" placeholder="Mínimo 6 caracteres" [class.is-invalid]="usuarioForm.get('password')?.invalid && usuarioForm.get('password')?.touched">
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label">Teléfono</label>
+                    <input type="text" class="form-control" formControlName="telefono" placeholder="Opcional">
+                  </div>
+                  <div class="col-md-12">
+                    <label class="form-label">Dirección</label>
+                    <input type="text" class="form-control" formControlName="direccion" placeholder="Dirección de domicilio">
+                  </div>
+
+                  @if (esMecanicoSeleccionado()) {
+                    <div class="col-md-12">
+                      <label class="form-label fw-bold text-primary">Especialidad del Mecánico</label>
+                      <input type="text" class="form-control border-primary" formControlName="especialidad" placeholder="Ej: Frenos, Motores, Electricidad..." [class.is-invalid]="usuarioForm.get('especialidad')?.invalid && usuarioForm.get('especialidad')?.touched">
+                      @if (usuarioForm.get('especialidad')?.invalid && usuarioForm.get('especialidad')?.touched) {
+                        <div class="invalid-feedback d-block">La especialidad es requerida para el rol Mecánico.</div>
+                      }
+                    </div>
+                  }
+
+                  <div class="col-12 mt-4 pt-3 border-top d-flex justify-content-end gap-2">
+                    <button type="button" class="btn btn-outline-secondary" (click)="toggleForm()">Cancelar</button>
+                    <button type="submit" class="btn btn-success px-4" [disabled]="usuarioForm.invalid || loading()">
+                      @if (loading()) {
+                        <span class="spinner-border spinner-border-sm me-1"></span>
+                      }
+                      Guardar Usuario
+                    </button>
+                  </div>
+                }
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
 
   <div class="card shadow-sm mb-4">
     <div class="card-body">
@@ -70,7 +180,7 @@
                   <td>{{ usuario.nombre }}</td>
                   <td>{{ usuario.correo }}</td>
                   <td>{{ usuario.telefono ?? 'N/A' }}</td>
-                  <td>{{ usuario.rol?.nombre || 'Sin Rol' }}</td>
+                  <td>{{ usuario.rol.nombre || 'Sin Rol' }}</td>
                   <td>
                     <span class="badge" [class]="usuario.activo ? 'bg-success' : 'bg-secondary'">
                       {{ usuario.activo ? 'Activo' : 'Inactivo' }}

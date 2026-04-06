@@ -72,24 +72,24 @@
             <tbody>
               @for (mecanico of mecanicos(); track mecanico.id) {
                 <tr>
-                  <td>{{ mecanico.usuario.id }}</td>
-                  <td>{{ mecanico.usuario.nombre }}</td>
-                  <td>{{ mecanico.usuario.correo }}</td>
+                  <td>{{ mecanico.id }}</td>
+                  <td>{{ mecanico.usuario?.nombre || 'Sin datos' }}</td>
+                  <td>{{ mecanico.usuario?.correo || 'N/A' }}</td>
                   <td>{{ mecanico.especialidad }}</td>
-                  <td>{{ mecanico.usuario.tipo_documento ?? 'N/A' }}</td>
-                  <td>{{ mecanico.usuario.numero_documento ?? 'N/A' }}</td>
-                  <td>{{ mecanico.usuario.telefono ?? 'N/A' }}</td>
+                  <td>{{ mecanico.usuario?.tipo_documento?.abreviatura ?? 'N/A' }}</td>
+                  <td>{{ mecanico.usuario?.numero_documento ?? 'N/A' }}</td>
+                  <td>{{ mecanico.usuario?.telefono ?? 'N/A' }}</td>
                   <td>
-                    <span class="badge" [class]="mecanico.usuario.activo ? 'bg-success' : 'bg-secondary'">
-                      {{ mecanico.usuario.activo ? 'Activo' : 'Inactivo' }}
+                    <span class="badge" [class]="mecanico.usuario?.activo ? 'bg-success' : 'bg-secondary'">
+                      {{ mecanico.usuario?.activo ? 'Activo' : 'Inactivo' }}
                     </span>
                   </td>
                   <td class="text-end">
                     <div class="btn-group" role="group" aria-label="Acciones de mecánico">
-                      <button type="button" class="btn btn-sm btn-outline-secondary" (click)="toggleActivo(mecanico.usuario.id)">
-                        {{ mecanico.usuario.activo ? 'Desactivar' : 'Activar' }}
+                      <button type="button" class="btn btn-sm btn-outline-secondary" (click)="toggleActivo(mecanico.usuario?.id!)" [disabled]="!mecanico.usuario">
+                        {{ mecanico.usuario?.activo ? 'Desactivar' : 'Activar' }}
                       </button>
-                      <button type="button" class="btn btn-sm btn-outline-danger" (click)="deleteMecanico(mecanico.usuario.id)">
+                      <button type="button" class="btn btn-sm btn-outline-danger" (click)="deleteMecanico(mecanico.usuario?.id!)" [disabled]="!mecanico.usuario">
                         Eliminar
                       </button>
                     </div>

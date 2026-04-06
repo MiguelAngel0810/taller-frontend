@@ -12,7 +12,6 @@ import { Mecanico } from '../models/mecanico.model';
 
 @Component({
   selector: 'app-mecanicos',
-  standalone: true,
   imports: [CommonModule],
   templateUrl: './mecanicos.html',
   styleUrl: './mecanicos.scss',
@@ -54,11 +53,11 @@ export class Mecanicos implements OnInit {
       const u = mecanico.usuario;
       const matchNombre =
         !nombre ||
-        u.nombre.toLowerCase().includes(nombre) ||
-        (u.numero_documento ?? '').includes(nombre);
-      const matchTipoDoc = !tipoDoc || u.tipo_documento === tipoDoc;
+        (u?.nombre || '').toLowerCase().includes(nombre) ||
+        (u?.numero_documento || '').includes(nombre);
+      const matchTipoDoc = !tipoDoc || u?.tipo_documento?.abreviatura === tipoDoc;
       const matchEstado =
-        !estado || (estado === 'activo' ? u.activo : !u.activo);
+        !estado || (u ? (estado === 'activo' ? u.activo : !u.activo) : false);
       const matchEspecialidad =
         !especialidad ||
         mecanico.especialidad.toLowerCase().includes(especialidad);
@@ -75,8 +74,9 @@ export class Mecanicos implements OnInit {
     this.loading.set(true);
     this.error.set(null);
     this.adminService.getMecanicos().subscribe({
-      next: (data: Mecanico[]) => {
-        this.allMecanicos.set(data);
+      next: (response: any) => {
+        const data = Array.isArray(response) ? response : (response?.data || []);
+        this.allMecanicos.set(data as Mecanico[]);
         this.loading.set(false);
       },
       error: (err) => {
@@ -119,7 +119,7 @@ export class Mecanicos implements OnInit {
       next: (response) => {
         this.allMecanicos.update((mecanicos) =>
           mecanicos.map((mecanico) =>
-            mecanico.id_usuario === usuarioId
+            mecanico.usuario?.id === usuarioId
               ? {
                   ...mecanico,
                   usuario: { ...mecanico.usuario, activo: response.activo },
@@ -139,7 +139,7 @@ export class Mecanicos implements OnInit {
     if (confirm('¿Estás seguro de que deseas eliminar este mecánico?')) {
       this.adminService.deleteUsuario(usuarioId).subscribe({
         next: () => {
-          this.allMecanicos.update((mecanicos) => mecanicos.filter((m) => m.id_usuario !== usuarioId));
+          this.allMecanicos.update((mecanicos) => mecanicos.filter((m) => m.usuario?.id !== usuarioId));
           alert('Mecánico eliminado exitosamente.');
         },
         error: () => alert('No se pudo eliminar el mecánico.')

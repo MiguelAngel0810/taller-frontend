@@ -7,12 +7,12 @@ import {
   signal,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import Swal from 'sweetalert2';
 import { AdminService } from '../../services/admin.service';
 import { Usuario } from '../models/usuario.model';
 
 @Component({
   selector: 'app-clientes',
-  standalone: true,
   imports: [CommonModule],
   templateUrl: './clientes.html',
   styleUrl: './clientes.scss',
@@ -50,7 +50,7 @@ export class Clientes implements OnInit {
 
     return baseClientes.filter(cliente => {
       const matchNombre = !nombre || cliente.nombre.toLowerCase().includes(nombre) || (cliente.numero_documento ?? '').includes(nombre);
-      const matchTipoDoc = !tipoDoc || cliente.tipo_documento === tipoDoc;
+      const matchTipoDoc = !tipoDoc || cliente.tipo_documento?.abreviatura === tipoDoc;
       const matchEstado = !estado || (estado === 'activo' ? cliente.activo : !cliente.activo);
 
       return matchNombre && matchTipoDoc && matchEstado;
@@ -109,20 +109,29 @@ export class Clientes implements OnInit {
       },
       error: (err) => {
         console.error('Error al cambiar estado del cliente:', err);
-        alert('No se pudo cambiar el estado del cliente.');
+        Swal.fire('Error', 'No se pudo cambiar el estado.', 'error');
       },
     });
   }
 
   deleteCliente(id: number): void {
-    if (confirm('¿Estás seguro de que deseas eliminar este cliente?')) {
-      this.adminService.deleteUsuario(id).subscribe({
-        next: () => {
-          this.allUsers.update((users) => users.filter((u) => u.id !== id));
-          alert('Cliente eliminado exitosamente.');
-        },
-        error: () => alert('No se pudo eliminar el cliente.'),
-      });
-    }
+    Swal.fire({
+      title: '¿Eliminar cliente?',
+      text: 'Se borrarán todos los datos asociados.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#dc3545',
+      confirmButtonText: 'Sí, borrar'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.adminService.deleteUsuario(id).subscribe({
+          next: () => {
+            this.allUsers.update((users) => users.filter((u) => u.id !== id));
+            Swal.fire('Eliminado', 'Cliente borrado correctamente', 'success');
+          },
+          error: () => Swal.fire('Error', 'No se pudo eliminar', 'error'),
+        });
+      }
+    });
   }
 }

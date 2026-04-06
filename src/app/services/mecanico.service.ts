@@ -2,19 +2,24 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import { OrdenServicio } from '../pages/models/orden-servicio.model';
+import { environment } from '../../environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class MecanicoService {
-  private apiUrl = 'http://127.0.0.1:8000/api';
+  private apiUrl = environment.apiUrl;
   private http = inject(HttpClient);
 
   getMisOrdenes(): Observable<OrdenServicio[]> {
-    // La respuesta del backend es un objeto paginado, por lo que necesitamos acceder a `data.data`
-    // para obtener el array de órdenes.
-    return this.http.get<{ data: { data: OrdenServicio[] } }>(`${this.apiUrl}/mis-ordenes`).pipe(
-      map(res => res.data.data || [])
+    return this.http.get<any>(`${this.apiUrl}/mis-ordenes`).pipe(
+      map(res => {
+        // Verificación en cascada para encontrar el array de datos
+        if (Array.isArray(res)) return res;
+        if (res.data && Array.isArray(res.data)) return res.data;
+        if (res.data?.data && Array.isArray(res.data.data)) return res.data.data;
+        return [];
+      })
     );
   }
 }

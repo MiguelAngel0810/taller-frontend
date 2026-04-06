@@ -1,90 +1,113 @@
-<div class="cliente-container">
-  <header class="welcome-header">
-    <h1>¡Bienvenido, {{ userName() }}!</h1>
-    <button class="logout-btn" (click)="logout()">
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
-      <span>Cerrar Sesión</span>
-    </button>
-  </header>
+<div class="client-dashboard">
+  <!-- Sidebar / Tabs -->
+  <aside class="sidebar">
+    <div class="user-profile">
+      <div class="avatar">👤</div>
+      <span class="welcome">Hola, <strong>{{ userName() }}</strong></span>
+    </div>
 
-  <section class="vehiculos-section">
-    <h2>Mis Vehículos</h2>
-    @if (loadingVehiculos()) {
-      <div class="loading">
-        <h3>Cargando tus vehículos...</h3>
+    <div class="stats-card">
+      <span class="count">{{ pendientesCount() }}</span>
+      <span class="label">Trabajos en curso</span>
+    </div>
+    
+    <nav class="side-nav">
+      <button [class.active]="activeTab() === 'garaje'" (click)="activeTab.set('garaje')">
+        <span class="icon">🚗</span> Mis Vehículos
+      </button>
+      <button [class.active]="activeTab() === 'servicios'" (click)="activeTab.set('servicios')">
+        <span class="icon">📋</span> Catálogo de Servicios
+      </button>
+    </nav>
+
+    <!-- Botón de logout reubicado y con estilo mejorado -->
+    <button (click)="logout()" class="logout-btn-client">
+      <span class="icon">🚪</span> Cerrar Sesión
+    </button>
+  </aside>
+
+  <!-- Main Content Area -->
+  <section class="content-area">
+    @if (activeTab() === 'garaje') {
+      <div class="header-section">
+        <h2>Mi Garaje Personal</h2>
+        <p>Gestiona y visualiza el estado de tus vehículos en tiempo real.</p>
       </div>
-    } @else {
-      <div class="vehiculos-grid">
-        @for (vehiculo of vehiculos(); track vehiculo.id) {
-          <div
-            class="vehiculo-card"
-            (click)="selectVehiculo(vehiculo)"
-            [class.selected]="selectedVehiculo()?.id === vehiculo.id">
-            <h3>{{ vehiculo.marca }} {{ vehiculo.modelo }}</h3>
-            <p><strong>Año:</strong> {{ vehiculo.anio }}</p>
-            <p><strong>Placa:</strong> {{ vehiculo.placa }}</p>
+
+      @if (loadingVehiculos()) {
+        <div class="loader-container">Cargando tus máquinas...</div>
+      } @else if (vehiculos().length === 0) {
+        <div class="empty-state">No tienes vehículos registrados actualmente.</div>
+      } @else {
+        <div class="vehicles-grid">
+          @for (vehiculo of vehiculos(); track vehiculo.id) {
+            <div class="vehicle-card" [class.selected]="selectedVehiculo()?.id === vehiculo.id" (click)="selectVehiculo(vehiculo)">
+              <div class="card-info">
+                <h3>{{ vehiculo.marca }} {{ vehiculo.modelo }}</h3>
+                <span class="plate">{{ vehiculo.placa }}</span>
+              </div>
+              <div class="status-indicator">
+                {{ (vehiculo.ordenes?.length ?? 0) > 0 ? 'Con historial' : 'Sin órdenes' }}
+              </div>
+            </div>
+          }
+        </div>
+      }
+
+      <!-- Seguimiento Detallado (Solución al error de 'id') -->
+      @if (selectedVehiculo(); as selected) {
+        <div class="tracking-panel card-appear">
+          <div class="panel-header">
+            <h3>Seguimiento: {{ selected.marca }} ({{ selected.placa }})</h3>
           </div>
-        } @empty {
-          <div class="no-data">
-            <h3>No tienes vehículos registrados.</h3>
-            <p>Cuando registres un vehículo en nuestro taller, aparecerá aquí.</p>
+
+          @if (loadingSeguimiento()) {
+            <div class="loader-inline">Consultando estado...</div>
+          } @else if (seguimiento(); as trackInfo) {
+            <div class="timeline">
+              <div class="order-info">
+                <strong>Orden #{{ trackInfo.orden.id }}</strong>: {{ trackInfo.orden.titulo }}
+                <span class="badge" [attr.data-status]="trackInfo.orden.estado">{{ trackInfo.orden.estado }}</span>
+              </div>
+              
+              <ul class="steps">
+                @for (etapa of trackInfo.etapas; track etapa.id) {
+                  <li class="step">
+                    <div class="step-dot"></div>
+                    <div class="step-content">
+                      <span class="step-name">{{ etapa.nombre }}</span>
+                      <span class="step-date">{{ etapa.fecha | date:'short' }}</span>
+                    </div>
+                  </li>
+                }
+              </ul>
+            </div>
+          } @else {
+            <div class="no-tracking">Selecciona un vehículo para ver su progreso actual.</div>
+          }
+        </div>
+      }
+    }
+
+    @if (activeTab() === 'servicios') {
+      <div class="header-section">
+        <h2>Servicios Especializados</h2>
+        <p>Conoce todo lo que podemos hacer por tu vehículo con tecnología de punta.</p>
+      </div>
+
+      <div class="services-catalog">
+        @for (servicio of catalogoServicios(); track servicio.id) {
+          <div class="service-item">
+            <div class="service-icon">{{ servicio.icono }}</div>
+            <div class="service-details">
+              <h4>{{ servicio.nombre }}</h4>
+              <p>{{ servicio.descripcion }}</p>
+              <div class="price-tag">Desde {{ servicio.precio }}</div>
+            </div>
+            <button class="action-btn">Consultar</button>
           </div>
         }
       </div>
     }
   </section>
-
-  @if (selectedVehiculo(); as vehiculo) {
-    <section class="seguimiento-section">
-      <h2>Seguimiento de {{ vehiculo.marca }} {{ vehiculo.modelo }}</h2>
-
-      @if (loadingSeguimiento()) {
-        <div class="loading">
-          <h3>Buscando información del servicio...</h3>
-        </div>
-      } @else if (error() && !seguimiento()) {
-        <div class="no-data">
-          <h3>¡Ups! Algo salió mal</h3>
-          <p>{{ error() }}</p>
-        </div>
-      } @else if (seguimiento(); as seg) {
-        <div class="orden-info">
-          <h3>Orden de Servicio #{{ seg.orden.id }}</h3>
-          <p><strong>Título:</strong> {{ seg.orden.titulo }}</p>
-          <p><strong>Descripción:</strong> {{ seg.orden.descripcion }}</p>
-          <p><strong>Estado:</strong> {{ seg.orden.estado }}</p>
-          <p><strong>Fecha Inicio:</strong> {{ seg.orden.fecha_inicio | date:'short' }}</p>
-          <p><strong>Fecha Fin:</strong> {{ seg.orden.fecha_fin ? (seg.orden.fecha_fin | date:'short') : 'En proceso' }}</p>
-        </div>
-
-        @if (seg.etapas && seg.etapas.length > 0) {
-          <h3>Etapas del Servicio</h3>
-          <div class="etapas-list">
-            @for (etapa of seg.etapas; track etapa.id) {
-              <div class="etapa">
-                <h4>{{ etapa.nombre }}</h4>
-                @if(etapa.pivot?.fecha_actualizacion) {
-                  <p class="fecha">Actualizado el: {{ etapa.pivot.fecha_actualizacion | date:'fullDate' }} a las {{ etapa.pivot.fecha_actualizacion | date:'shortTime' }}</p>
-                }
-                <p>{{ etapa.descripcion }}</p>
-              </div>
-            }
-          </div>
-        } @else {
-          <div class="no-data">
-            <p>Aún no se han registrado etapas para esta orden de servicio.</p>
-          </div>
-        }
-      } @else {
-        <div class="no-data">
-          <h3>Sin orden activa</h3>
-          <p>Este vehículo no tiene una orden de servicio activa en este momento.</p>
-        </div>
-      }
-    </section>
-
-    <div class="sidebar-footer">
-      <button (click)="logout()">Cerrar Sesión</button>
-    </div>
-  }
 </div>

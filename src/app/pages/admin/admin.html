@@ -1,17 +1,33 @@
+<!-- Este layout reemplaza completamente la vista pública para el rol ADMIN -->
 <div class="admin-panel">
   <aside class="sidebar">
     <div class="sidebar-header">
-      <h3>Panel de Administrador</h3>
+      <div class="d-flex align-items-center gap-2">
+        <i class="bi bi-shield-lock-fill fs-4 text-primary"></i>
+        <h3 class="h5 mb-0">Panel de Control</h3>
+      </div>
     </div>
     <nav class="sidebar-nav">
-      <a routerLink="clientes" routerLinkActive="active">Gestión de Clientes</a>
-      <a routerLink="mecanicos" routerLinkActive="active">Gestión de Mecánicos</a>
-      <a routerLink="vehiculos" routerLinkActive="active">Gestión de Vehículos</a>
-      <a routerLink="usuarios" routerLinkActive="active">Gestión de Usuarios</a>
-      <a routerLink="ordenes" routerLinkActive="active">Órdenes de Servicio</a>
+      <a routerLink="clientes" routerLinkActive="active">
+        <i class="bi bi-people me-2"></i> Gestión de Clientes
+      </a>
+      <a routerLink="mecanicos" routerLinkActive="active">
+        <i class="bi bi-tools me-2"></i> Gestión de Mecánicos
+      </a>
+      <a routerLink="vehiculos" routerLinkActive="active">
+        <i class="bi bi-car-front me-2"></i> Gestión de Vehículos
+      </a>
+      <a routerLink="usuarios" routerLinkActive="active">
+        <i class="bi bi-person-badge me-2"></i> Gestión de Usuarios
+      </a>
+      <a routerLink="ordenes" routerLinkActive="active">
+        <i class="bi bi-clipboard-check me-2"></i> Órdenes de Servicio
+      </a>
     </nav>
     <div class="sidebar-footer">
-      <button (click)="logout()">Cerrar Sesión</button>
+      <button class="btn btn-outline-danger btn-sm w-100 d-flex align-items-center justify-content-center gap-2" (click)="logout()">
+        <i class="bi bi-box-arrow-left"></i> Cerrar Sesión
+      </button>
     </div>
   </aside>
   <main class="main-content">

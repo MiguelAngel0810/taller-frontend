@@ -71,7 +71,7 @@
                   <td>{{ cliente.id }}</td>
                   <td>{{ cliente.nombre }}</td>
                   <td>{{ cliente.correo }}</td>
-                  <td>{{ cliente.tipo_documento ?? 'N/A' }}</td>
+                  <td>{{ cliente.tipo_documento?.abreviatura ?? 'N/A' }}</td>
                   <td>{{ cliente.numero_documento ?? 'N/A' }}</td>
                   <td>{{ cliente.telefono ?? 'N/A' }}</td>
                   <td>{{ cliente.direccion ?? 'N/A' }}</td>
