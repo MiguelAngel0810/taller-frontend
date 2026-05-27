@@ -10,6 +10,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, Validators, ReactiveFormsModule, ValidatorFn, AbstractControl, ValidationErrors } from '@angular/forms';
 import Swal from 'sweetalert2';
 import { ReportService } from '../../services/report.service';
+import { HttpErrorResponse } from '@angular/common/http';
 
 @Component({
   selector: 'app-reportes',
@@ -38,6 +39,7 @@ export class Reportes implements OnInit {
     mes: [new Date().getMonth() + 1],
     fecha_inicio: [''],
     fecha_fin: [''],
+    tipo_cliente: [''] // Agregado el filtro tipo_cliente
   }, { validators: this.rangoFechasValidator });
 
   public filtroActivo = computed(() => this.reportForm.get('tipo_filtro')?.value);
