@@ -4,7 +4,6 @@ import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-admin',
-  standalone: true,
   imports: [RouterOutlet, RouterLink, RouterLinkActive],
   templateUrl: './admin.html',
   styleUrl: './admin.scss',

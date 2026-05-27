@@ -53,6 +53,10 @@ export const routes: Routes = [
         path: 'ordenes',
         loadComponent: () => import('./pages/admin/ordenes').then(m => m.Ordenes)
       },
+      {
+        path: 'reportes',
+        loadComponent: () => import('./pages/admin/reportes').then(m => m.Reportes)
+      },
       { path: '', redirectTo: 'clientes', pathMatch: 'full' }
     ]
   },
