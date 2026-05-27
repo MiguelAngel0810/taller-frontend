@@ -10,7 +10,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, Validators, ReactiveFormsModule, ValidatorFn, AbstractControl, ValidationErrors } from '@angular/forms';
 import Swal from 'sweetalert2';
 import { ReportService } from '../../services/report.service';
-import { HttpErrorResponse } from '@angular/common/http';
+import { HttpErrorResponse, HttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'app-reportes',
@@ -24,6 +24,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 export class Reportes implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly reportService = inject(ReportService);
+  private readonly http = inject(HttpClient);
 
   public cargando = signal(false);
   public meses = [
@@ -55,6 +56,23 @@ export class Reportes implements OnInit {
   public descargarExcel(): void {
     if (this.reportForm.invalid) return;
 
+    const rawValue = this.reportForm.getRawValue();
+    // Sanitización: Enviar solo lo que el controlador espera según el tipo de filtro
+    const payload: any = {
+      tipo_filtro: rawValue.tipo_filtro,
+      tipo_cliente: rawValue.tipo_cliente
+    };
+
+    if (rawValue.tipo_filtro === 'anio') {
+      payload.anio = rawValue.anio;
+    } else if (rawValue.tipo_filtro === 'mes_especifico') {
+      payload.anio = rawValue.anio;
+      payload.mes = rawValue.mes;
+    } else if (rawValue.tipo_filtro === 'rango') {
+      payload.fecha_inicio = rawValue.fecha_inicio;
+      payload.fecha_fin = rawValue.fecha_fin;
+    }
+
     this.cargando.set(true);
     Swal.fire({
       title: 'Generando Reporte',
@@ -64,7 +82,7 @@ export class Reportes implements OnInit {
       didOpen: () => Swal.showLoading()
     });
 
-    this.reportService.downloadClientServiceReport(this.reportForm.getRawValue()).subscribe({
+    this.reportService.downloadClientServiceReport(payload).subscribe({
       next: (blob) => {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -78,10 +96,31 @@ export class Reportes implements OnInit {
         this.cargando.set(false);
         Swal.fire('¡Completado!', 'Tu reporte se ha descargado exitosamente.', 'success');
       },
-      error: (err) => {
+      error: async (err: HttpErrorResponse) => {
         this.cargando.set(false);
-        console.error('Report Error:', err);
-        Swal.fire('Error', 'Hubo un problema al generar el archivo. Intente más tarde.', 'error');
+        
+        let errorMessage = 'Hubo un problema interno en el servidor al procesar el Excel.';
+
+        // Mapeo inteligente del error cuando la respuesta es un Blob JSON (típico en errores 500)
+        if (err.error instanceof Blob && err.error.type === 'application/json') {
+          try {
+            const text = await err.error.text();
+            const parsedError = JSON.parse(text);
+            errorMessage = parsedError.message || errorMessage;
+            
+            // Log detallado para desarrollo
+            console.error('Error detallado del Backend:', parsedError);
+          } catch (e) {
+            console.error('No se pudo parsear el JSON de error binario');
+          }
+        }
+
+        Swal.fire({
+          icon: 'error',
+          title: 'Error en el Reporte',
+          text: errorMessage,
+          footer: '<small>Verifica si existen registros para los filtros seleccionados.</small>'
+        });
       }
     });
   }
