@@ -1,12 +1,51 @@
 <div class="reports-container p-4 md:p-8" aria-labelledby="main-title">
+  
+  <style>
+    :root {
+      --primary: #2563eb; /* Azul moderno */
+      --primary-subtle: #dbeafe;
+    }
+    .bg-primary { bg-color: var(--primary) !important; }
+    .text-primary { color: var(--primary) !important; }
+    .bg-primary-subtle { background-color: var(--primary-subtle) !important; }
+    .from-primary { --tw-gradient-from: var(--primary) !important; --tw-gradient-to: rgb(37 99 235 / 0); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important; }
+    .focus\:ring-primary:focus { --tw-ring-opacity: 1; --tw-ring-color: rgb(37 99 235 / var(--tw-ring-opacity)) !important; }
+    .focus\:border-primary:focus { border-color: var(--primary) !important; }
+    
+    /* Utilidades de Flexbox por si falla Bootstrap */
+    .d-flex { display: flex !important; }
+    .align-items-center { align-items: center !important; }
+    .justify-content-center { justify-content: center !important; }
+    @media (min-width: 768px) {
+      .justify-content-md-start { justify-content: flex-start !important; }
+    }
+    
+    /* Estilos personalizados para Inputs y Selects */
+    .form-control-custom {
+      transition: all 0.2s ease-in-out;
+    }
+    .form-control-custom:focus {
+      background-color: #fff;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15);
+    }
+    
+    /* Alerta de Error estilizada */
+    .alert-danger-custom {
+      background-color: #fef2f2;
+      border: 1px solid #fee2e2;
+      color: #991b1b;
+    }
+  </style>
+
   <header class="mb-10 text-center md:text-left">
-    <div class="d-flex align-items-center justify-content-center justify-content-md-start gap-3 mb-2">
-      <div class="p-3 bg-primary-subtle rounded-3 text-primary">
-        <i class="bi bi-graph-up-arrow fs-2"></i>
+    <div class="d-flex align-items-center justify-content-center justify-content-md-start gap-4 mb-2">
+      <div class="p-3 bg-primary-subtle rounded-2xl text-primary d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+        <i class="bi bi-graph-up-arrow" style="font-size: 1.75rem;"></i>
       </div>
       <div>
-        <h1 id="main-title" class="text-3xl font-extrabold text-slate-900 mb-0">Reportes Estratégicos</h1>
-        <p class="text-slate-500">Módulo de auditoría y análisis de operaciones del taller.</p>
+        <h1 id="main-title" class="text-3xl font-extrabold text-slate-900 mb-1 tracking-tight">Reportes</h1>
+        <p class="text-slate-500 text-sm md:text-base m-0">Módulo de auditoría y análisis de operaciones del taller.</p>
       </div>
     </div>
   </header>
@@ -17,27 +56,24 @@
     <form [formGroup]="reportForm" (ngSubmit)="descargarExcel()" class="p-6 md:p-10 space-y-8">
       
       <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <!-- Configuración Principal -->
         <div class="space-y-6">
           <div class="space-y-2">
-            <label for="tipo_filtro" class="block text-sm font-bold text-slate-700 uppercase tracking-wider">
-              <i class="bi bi-funnel me-1"></i> Tipo de Periodicidad
+            <label for="tipo_filtro" class="block text-xs font-bold text-slate-500 uppercase tracking-wider">
+              <i class="bi bi-funnel me-1 text-primary"></i> Tipo de Periodicidad
             </label>
             <select id="tipo_filtro" formControlName="tipo_filtro" 
-                    class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-xl focus:ring-primary focus:border-primary block p-3.5 transition-all shadow-sm"
+                    class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-xl block p-3.5 shadow-sm form-control-custom outline-none"
                     aria-required="true">
               <option value="anio">Balance Anual</option>
-              <option value="mes_especifico">Detalle Mensual</option>
-              <option value="rango">Rango de Fechas</option>
-            </select>
+              </select>
           </div>
 
           <div class="space-y-2">
-            <label for="tipo_cliente" class="block text-sm font-bold text-slate-700 uppercase tracking-wider">
-              <i class="bi bi-person-badge me-1"></i> Segmento de Cliente
+            <label for="tipo_cliente" class="block text-xs font-bold text-slate-500 uppercase tracking-wider">
+              <i class="bi bi-person-badge me-1 text-primary"></i> Segmento de Cliente
             </label>
             <select id="tipo_cliente" formControlName="tipo_cliente"
-                    class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-xl focus:ring-primary focus:border-primary block p-3.5 shadow-sm">
+                    class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-xl block p-3.5 shadow-sm form-control-custom outline-none">
               <option value="">Todos los Clientes</option>
               <option value="natural">Personas Naturales</option>
               <option value="juridico">Empresas (Jurídico)</option>
@@ -45,24 +81,25 @@
           </div>
         </div>
 
-        <!-- Filtros Dinámicos -->
-        <div class="bg-slate-50 p-6 rounded-2xl border border-dashed border-slate-300">
-          <h3 class="text-xs font-bold text-slate-400 uppercase mb-4 tracking-widest">Parámetros del Tiempo</h3>
+        <div class="bg-slate-50/70 p-6 rounded-2xl border border-dashed border-slate-300 flex flex-col justify-center">
+          <h3 class="text-xs font-bold text-slate-400 uppercase mb-4 tracking-widest flex align-items-center gap-1">
+            <i class="bi bi-calendar3"></i> Parámetros del Tiempo
+          </h3>
           
-          <div class="space-y-4">
+          <div class="space-y-4 width-full">
             @if (filtroActivo() === 'anio' || filtroActivo() === 'mes_especifico') {
               <div class="space-y-2">
-                <label for="anio" class="text-sm font-semibold text-slate-600">Año del Ejercicio</label>
+                <label for="anio" class="text-xs font-semibold text-slate-600 uppercase tracking-wide">Año del Ejercicio</label>
                 <input type="number" id="anio" formControlName="anio" 
-                       class="w-full bg-white border border-slate-200 rounded-lg p-3 focus:ring-2 focus:ring-primary/20 outline-none"
-                       placeholder="Ej. 2024">
+                       class="w-full bg-white border border-slate-300 rounded-xl p-3 shadow-sm form-control-custom outline-none text-sm"
+                       placeholder="Ej. 2026">
               </div>
             }
 
             @if (filtroActivo() === 'mes_especifico') {
               <div class="space-y-2">
-                <label for="mes" class="text-sm font-semibold text-slate-600">Mes a Reportar</label>
-                <select id="mes" formControlName="mes" class="w-full bg-white border border-slate-200 rounded-lg p-3 outline-none">
+                <label for="mes" class="text-xs font-semibold text-slate-600 uppercase tracking-wide">Mes a Reportar</label>
+                <select id="mes" formControlName="mes" class="w-full bg-white border border-slate-300 rounded-xl p-3 shadow-sm form-control-custom outline-none text-sm">
                   @for (m of meses; track m.id) {
                     <option [value]="m.id">{{ m.nombre }}</option>
                   }
@@ -73,14 +110,14 @@
             @if (filtroActivo() === 'rango') {
               <div class="space-y-4">
                 <div class="space-y-2">
-                  <label for="fecha_inicio" class="text-sm font-semibold text-slate-600">Desde</label>
+                  <label for="fecha_inicio" class="text-xs font-semibold text-slate-600 uppercase tracking-wide">Desde</label>
                   <input type="date" id="fecha_inicio" formControlName="fecha_inicio" 
-                         class="w-full border border-slate-200 rounded-lg p-3 outline-none">
+                         class="w-full bg-white border border-slate-300 rounded-xl p-3 shadow-sm form-control-custom outline-none text-sm">
                 </div>
                 <div class="space-y-2">
-                  <label for="fecha_fin" class="text-sm font-semibold text-slate-600">Hasta</label>
+                  <label for="fecha_fin" class="text-xs font-semibold text-slate-600 uppercase tracking-wide">Hasta</label>
                   <input type="date" id="fecha_fin" formControlName="fecha_fin" 
-                         class="w-full border border-slate-200 rounded-lg p-3 outline-none">
+                         class="w-full bg-white border border-slate-300 rounded-xl p-3 shadow-sm form-control-custom outline-none text-sm">
                 </div>
               </div>
             }
@@ -89,28 +126,28 @@
       </div>
       
       @if (reportForm.hasError('rangoInvalido')) {
-        <div class="alert alert-danger rounded-xl border-0 shadow-sm d-flex align-items-center gap-2" role="alert">
-          <i class="bi bi-exclamation-octagon-fill"></i>
-          <span>La fecha de término debe ser posterior a la de inicio.</span>
+        <div class="alert alert-danger-custom p-4 rounded-xl shadow-sm d-flex align-items-center gap-3 transition-all animate-fade-in" role="alert">
+          <i class="bi bi-exclamation-octagon-fill text-lg flex-shrink-0"></i>
+          <span class="text-sm font-medium">La fecha de término debe ser posterior a la de inicio.</span>
         </div>
       }
 
-      <div class="pt-8 border-t border-slate-100 flex flex-col items-center gap-4">
+      <div class="pt-6 border-t border-slate-100 flex flex-col items-center gap-4">
         <button type="submit" 
                 [disabled]="reportForm.invalid || cargando()"
-                class="group relative w-full md:w-80 bg-slate-900 hover:bg-black text-white font-bold py-4 px-8 rounded-2xl shadow-xl transition-all duration-300 transform hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0">
-          <span class="flex items-center justify-center gap-2 text-lg">
+                class="group relative w-full md:w-80 bg-slate-900 hover:bg-slate-800 text-white font-bold py-4 px-8 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:-translate-y-0.5 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:shadow-none">
+          <span class="flex items-center justify-center gap-2 text-base">
             @if (cargando()) {
-              <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+              <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true" style="width: 1.2rem; height: 1.2rem;"></span>
               <span>Generando...</span>
             } @else {
-              <i class="bi bi-file-earmark-excel"></i>
+              <i class="bi bi-file-earmark-excel text-xl text-emerald-400 group-hover:scale-110 transition-transform"></i>
               <span>Obtener Reporte</span>
             }
           </span>
         </button>
         <p class="text-xs text-slate-400 text-center max-w-sm">
-          * El archivo se generará automáticamente con formato .xlsx optimizado para lectura y filtros de Excel.
+          El archivo se descargará automáticamente en formato Microsoft Excel (<span class="font-semibold text-slate-500">.xlsx</span>).
         </p>
       </div>
     </form>
