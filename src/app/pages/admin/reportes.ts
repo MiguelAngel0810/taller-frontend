@@ -33,10 +33,10 @@ export class Reportes implements OnInit {
   ];
 
   public catalogoServicios = [
-    'Mantenimiento Preventivo',
-    'Alineamiento y Balanceo',
-    'Escaneo Electrónico',
-    'Sistema de Frenos'
+    'Traccionamiento',
+    'Planchado',
+    'Pintura',
+    'Mantenimiento',
   ];
 
   public reportForm = this.fb.group({
