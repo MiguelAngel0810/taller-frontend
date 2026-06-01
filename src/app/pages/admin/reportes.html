@@ -70,6 +70,23 @@
         }
       </div>
 
+      <!-- Sección de Selección de Servicios -->
+      <div class="services-section mb-4">
+        <label class="form-label fw-bold mb-2">🛠️ Incluir en el reporte los servicios:</label>
+        <div class="services-grid">
+          <div formArrayName="servicios" class="row">
+            @for (servicio of catalogoServicios; track $index) {
+              <div class="col-md-6 col-lg-3">
+                <div class="form-check form-switch">
+                  <input class="form-check-input" type="checkbox" [formControlName]="$index" [id]="'svc' + $index">
+                  <label class="form-check-label" [for]="'svc' + $index">{{ servicio }}</label>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+
       <!-- Alerta de validación de meses -->
       @if (reportForm.hasError('rangoMesesInvalido')) {
         <div class="alert-error" style="color: #dc2626; background: #fee2e2; padding: 0.75rem; border-radius: 8px; margin-bottom: 1.5rem; font-size: 0.875rem; border: 1px solid #fecaca;">

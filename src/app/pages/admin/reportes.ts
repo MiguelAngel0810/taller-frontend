@@ -7,7 +7,7 @@ import {
   signal,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, Validators, ReactiveFormsModule, ValidatorFn, AbstractControl, ValidationErrors } from '@angular/forms';
+import { FormBuilder, Validators, ReactiveFormsModule, AbstractControl, ValidationErrors, FormArray, FormControl } from '@angular/forms';
 import Swal from 'sweetalert2';
 import { ReportService } from '../../services/report.service';
 import { HttpErrorResponse, HttpClient } from '@angular/common/http';
@@ -32,18 +32,34 @@ export class Reportes implements OnInit {
     { id: 10, nombre: 'Octubre' }, { id: 11, nombre: 'Noviembre' }, { id: 12, nombre: 'Diciembre' }
   ];
 
+  public catalogoServicios = [
+    'Mantenimiento Preventivo',
+    'Alineamiento y Balanceo',
+    'Escaneo Electrónico',
+    'Sistema de Frenos'
+  ];
+
   public reportForm = this.fb.group({
     tipo_filtro: ['anio', [Validators.required]],
     anio: [new Date().getFullYear(), [Validators.required, Validators.min(2025), Validators.max(new Date().getFullYear())]],
     mes: [new Date().getMonth() + 1],
     mes_inicio: [1],
     mes_fin: [new Date().getMonth() + 1],
-    tipo_cliente: [''] // Agregado el filtro tipo_cliente
+    tipo_cliente: [''],
+    servicios: this.fb.array(this.catalogoServicios.map(() => new FormControl(true))) // Todos seleccionados por defecto
   }, { validators: this.rangoMesesValidator });
 
-  public filtroActivo = computed(() => this.reportForm.get('tipo_filtro')?.value);
+  // Signal manual para rastrear el tipo de filtro y asegurar reactividad en el HTML
+  public filtroActivo = signal('anio');
 
-  ngOnInit(): void {}
+  get serviciosFormArray() {
+    return this.reportForm.get('servicios') as FormArray;
+  }
+
+  ngOnInit(): void {
+    // Suscribirse a cambios para actualizar la señal de UI
+    this.reportForm.get('tipo_filtro')?.valueChanges.subscribe(val => this.filtroActivo.set(val || 'anio'));
+  }
 
   private rangoMesesValidator(control: AbstractControl): ValidationErrors | null {
     const tipo = control.get('tipo_filtro')?.value;
@@ -61,8 +77,15 @@ export class Reportes implements OnInit {
     // Sanitización: Enviar solo lo que el controlador espera según el tipo de filtro
     const payload: any = {
       tipo_filtro: rawValue.tipo_filtro,
-      tipo_cliente: rawValue.tipo_cliente
+      tipo_cliente: rawValue.tipo_cliente,
+      // Mapeamos los booleanos del FormArray a los nombres de los servicios
+      servicios: this.catalogoServicios.filter((_, i) => rawValue.servicios?.[i])
     };
+
+    if (payload.servicios.length === 0) {
+      Swal.fire('Atención', 'Debes seleccionar al menos un servicio para el reporte.', 'warning');
+      return;
+    }
 
     if (rawValue.tipo_filtro === 'anio') {
       payload.anio = rawValue.anio;
