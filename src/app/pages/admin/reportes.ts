@@ -108,8 +108,8 @@ export class Reportes implements OnInit {
     });
 
     this.reportService.descargarReporteClientes(payload).subscribe({
-      next: (response: HttpResponse<Blob>) => this.procesarDescargaExitosa(response),
-      error: (err: HttpErrorResponse) => this.procesarErrorDescarga(err)
+      next: (response) => this.procesarDescargaExitosa(response),
+      error: (err) => this.procesarErrorDescarga(err)
     });
   }
 

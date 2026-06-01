@@ -2,7 +2,8 @@ import { Component, ChangeDetectionStrategy, signal, inject, computed } from '@a
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { ReportService } from '../services/report.service';
-import { SwalComponent, SweetAlert2Module } from '@sweetalert2/ngx-sweetalert2';
+import { HttpErrorResponse, HttpResponse } from '@angular/common/http';
+import { SweetAlert2Module } from '@sweetalert2/ngx-sweetalert2';
 import Swal from 'sweetalert2';
 
 @Component({
@@ -126,8 +127,10 @@ export class ReportGeneratorComponent {
       didOpen: () => Swal.showLoading()
     });
 
-    this.reportService.downloadClientServiceReport(this.reportForm.value).subscribe({
-      next: (blob) => {
+    this.reportService.descargarReporteClientes(this.reportForm.value).subscribe({
+      next: (response: HttpResponse<Blob>) => {
+        const blob = response.body;
+        if (!blob) return;
         const url = window.URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
@@ -142,7 +145,7 @@ export class ReportGeneratorComponent {
           text: 'El reporte se ha generado correctamente.'
         });
       },
-      error: (err) => {
+      error: (err: HttpErrorResponse) => {
         this.isDownloading.set(false);
         Swal.fire({
           icon: 'error',
