@@ -34,21 +34,24 @@ export class Reportes implements OnInit {
 
   public reportForm = this.fb.group({
     tipo_filtro: ['anio', [Validators.required]],
-    anio: [new Date().getFullYear(), [Validators.min(2000)]],
+    anio: [new Date().getFullYear(), [Validators.required, Validators.min(2025), Validators.max(new Date().getFullYear())]],
     mes: [new Date().getMonth() + 1],
-    fecha_inicio: [''],
-    fecha_fin: [''],
+    mes_inicio: [1],
+    mes_fin: [new Date().getMonth() + 1],
     tipo_cliente: [''] // Agregado el filtro tipo_cliente
-  }, { validators: this.rangoFechasValidator });
+  }, { validators: this.rangoMesesValidator });
 
   public filtroActivo = computed(() => this.reportForm.get('tipo_filtro')?.value);
 
   ngOnInit(): void {}
 
-  private rangoFechasValidator(control: AbstractControl): ValidationErrors | null {
-    const inicio = control.get('fecha_inicio')?.value;
-    const fin = control.get('fecha_fin')?.value;
-    return (inicio && fin && new Date(inicio) > new Date(fin)) ? { rangoInvalido: true } : null;
+  private rangoMesesValidator(control: AbstractControl): ValidationErrors | null {
+    const tipo = control.get('tipo_filtro')?.value;
+    if (tipo !== 'rango') return null;
+    
+    const inicio = control.get('mes_inicio')?.value;
+    const fin = control.get('mes_fin')?.value;
+    return (inicio && fin && Number(inicio) > Number(fin)) ? { rangoMesesInvalido: true } : null;
   }
 
   public descargarExcel(): void {
@@ -67,8 +70,9 @@ export class Reportes implements OnInit {
       payload.anio = rawValue.anio;
       payload.mes = rawValue.mes;
     } else if (rawValue.tipo_filtro === 'rango') {
-      payload.fecha_inicio = rawValue.fecha_inicio;
-      payload.fecha_fin = rawValue.fecha_fin;
+      payload.anio = rawValue.anio;
+      payload.mes_inicio = rawValue.mes_inicio;
+      payload.mes_fin = rawValue.mes_fin;
     }
 
     this.cargando.set(true);

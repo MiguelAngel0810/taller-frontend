@@ -13,7 +13,7 @@
           <select id="tipo_filtro" formControlName="tipo_filtro" class="form-control">
             <option value="anio">Reporte Anual</option>
             <option value="mes_especifico">Reporte Mensual</option>
-            <option value="rango">Rango Personalizado</option>
+            <option value="rango">Rango de Meses</option>
           </select>
         </div>
 
@@ -28,12 +28,16 @@
         </div>
 
         <!-- Controles dinámicos según el tipo de filtro -->
-        @if (filtroActivo() === 'anio' || filtroActivo() === 'mes_especifico') {
-          <div class="form-group">
-            <label for="anio">Año Fiscal</label>
-            <input type="number" id="anio" formControlName="anio" class="form-control" placeholder="Ej: 2024">
-          </div>
-        }
+        <div class="form-group">
+          <label for="anio">Año Fiscal</label>
+          <input type="number" id="anio" formControlName="anio" class="form-control" placeholder="Ej: 2025">
+          @if (reportForm.get('anio')?.hasError('max')) {
+            <small class="text-danger" style="font-size: 0.75rem;">No puede ser mayor al año actual.</small>
+          }
+          @if (reportForm.get('anio')?.hasError('min')) {
+            <small class="text-danger" style="font-size: 0.75rem;">Los reportes solo están disponibles a partir del año 2025.</small>
+          }
+        </div>
 
         @if (filtroActivo() === 'mes_especifico') {
           <div class="form-group">
@@ -48,20 +52,28 @@
 
         @if (filtroActivo() === 'rango') {
           <div class="form-group">
-            <label for="fecha_inicio">Fecha Inicial</label>
-            <input type="date" id="fecha_inicio" formControlName="fecha_inicio" class="form-control">
+            <label for="mes_inicio">Mes Inicial</label>
+            <select id="mes_inicio" formControlName="mes_inicio" class="form-control">
+              @for (mes of meses; track mes.id) {
+                <option [value]="mes.id">{{ mes.nombre }}</option>
+              }
+            </select>
           </div>
           <div class="form-group">
-            <label for="fecha_fin">Fecha Final</label>
-            <input type="date" id="fecha_fin" formControlName="fecha_fin" class="form-control">
+            <label for="mes_fin">Mes Final</label>
+            <select id="mes_fin" formControlName="mes_fin" class="form-control">
+              @for (mes of meses; track mes.id) {
+                <option [value]="mes.id">{{ mes.nombre }}</option>
+              }
+            </select>
           </div>
         }
       </div>
 
-      <!-- Alerta de validación de fechas -->
-      @if (reportForm.hasError('rangoInvalido')) {
+      <!-- Alerta de validación de meses -->
+      @if (reportForm.hasError('rangoMesesInvalido')) {
         <div class="alert-error" style="color: #dc2626; background: #fee2e2; padding: 0.75rem; border-radius: 8px; margin-bottom: 1.5rem; font-size: 0.875rem; border: 1px solid #fecaca;">
-          <strong>Error:</strong> La fecha de inicio no puede ser posterior a la fecha final.
+          <strong>Error de coherencia:</strong> El mes inicial no puede ser posterior al mes final del rango.
         </div>
       }
 
