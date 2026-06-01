@@ -107,45 +107,46 @@ export class Reportes implements OnInit {
       didOpen: () => Swal.showLoading()
     });
 
-    this.reportService.downloadClientServiceReport(payload).subscribe({
-      next: (response: any) => this.procesarDescargaExitosa(response),
+    this.reportService.descargarReporteClientes(payload).subscribe({
+      next: (response: HttpResponse<Blob>) => this.procesarDescargaExitosa(response),
       error: (err: HttpErrorResponse) => this.procesarErrorDescarga(err)
     });
   }
 
-  private procesarDescargaExitosa(response: any): void {
-    // Detectamos si la respuesta es el objeto completo o solo el blob
-    const blob = response instanceof HttpResponse ? response.body : response;
-
-    if (!blob) {
-      this.cargando.set(false);
-      Swal.fire('Error', 'El servidor respondió con un archivo vacío.', 'error');
-      return;
-    }
-
+  private procesarDescargaExitosa(response: HttpResponse<Blob>): void {
+    this.cargando.set(false);
+    const blob = new Blob([response.body!], { 
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' 
+    });
+    
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `reporte_${Date.now()}.xlsx`;
+    a.download = `Reporte_Servicios_${new Date().getTime()}.xlsx`;
     document.body.appendChild(a);
     a.click();
     
     // Limpieza
     window.URL.revokeObjectURL(url);
     document.body.removeChild(a);
-    this.cargando.set(false);
-    Swal.fire('¡Completado!', 'Reporte descargado.', 'success');
+
+    Swal.fire({
+      title: '¡Éxito!',
+      text: 'El reporte se ha generado correctamente.',
+      icon: 'success',
+      timer: 2000
+    });
   }
 
   private procesarErrorDescarga(err: HttpErrorResponse): void {
     this.cargando.set(false);
     
     if (err.status === 404) {
-      Swal.fire('Sin registros', 'No hay datos para los filtros seleccionados.', 'info');
+      Swal.fire('Sin registros', 'No se encontraron datos que coincidan con los filtros seleccionados.', 'warning');
       return;
     }
 
-    let errorMessage = 'Error al generar el Excel.';
+    let errorMessage = 'No se pudo generar el reporte. Verifique su conexión.';
 
     // Si el error viene como un Blob (porque responseType era 'blob')
     if (err.error instanceof Blob && err.error.type === 'application/json') {
