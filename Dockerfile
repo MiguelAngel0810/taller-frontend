@@ -1,5 +1,5 @@
-# Etapa 1: Compilar la aplicación con Node.js
-FROM node:18-alpine AS build
+# Etapa 1: Compilar la aplicación con Node.js (Actualizado a Node 20)
+FROM node:20-alpine AS build
 WORKDIR /app
 
 # Copiar archivos de dependencias e instalarlos
