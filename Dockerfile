@@ -23,9 +23,13 @@ RUN npm run build -- --configuration=production
 FROM nginx:alpine
 
 
-COPY --from=build /app/dist/Crud_Angular/browser /usr/share/nginx/html/
+# Copia todo el contenido de la compilación buscando directamente los archivos web
+# Esto evita fallos por mayúsculas, minúsculas o subcarpetas sorpresa
+COPY --from=build /app/dist/*/* /usr/share/nginx/html/
+COPY --from=build /app/dist/*/*/* /usr/share/nginx/html/
+COPY --from=build /app/dist/* /usr/share/nginx/html/
 
-# Exponer el puerto 80 que usa Nginx por defecto internamente
+# Exponer el puerto 80 que ya tienes configurado en Coolify
 EXPOSE 80
 
 CMD ["nginx", "-g", "daemon off;"]
