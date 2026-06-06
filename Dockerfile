@@ -5,7 +5,7 @@ WORKDIR /app
 # Copiar archivos de dependencias
 COPY package*.json ./
 
-# CONFIGURACIÓN ANTIBLOQUEO (Para saltar restricciones de red)
+# CONFIGURACIÓN ANTIBLOQUEO
 RUN npm config set strict-ssl false
 RUN npm config set registry http://registry.npmjs.org/
 
@@ -22,9 +22,8 @@ RUN npm run build -- --configuration=production
 # Etapa 2: Servir la aplicación con Nginx
 FROM nginx:alpine
 
-# RUTA UNIVERSAL: Copia lo que sea que Angular haya construido dentro de dist/
-# hacia la carpeta pública de Nginx
-COPY --from=build /app/dist/*/* /usr/share/nginx/html/
+
+COPY --from=build /app/dist/Crud_Angular/browser /usr/share/nginx/html/
 
 # Exponer el puerto 80 que usa Nginx por defecto internamente
 EXPOSE 80
